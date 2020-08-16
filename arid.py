@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 
 
+from PIL import Image
+
 
 def main():
     parser = argparse.ArgumentParser(description='Access the ARID database')
@@ -12,7 +14,7 @@ def main():
     build_wps(args.config)
     
 
-def build_wps(config_path):
+def build_wps(config_path='config.ini'):
     config = configparser.ConfigParser()
     try:
         with open(config_path) as config_file:
@@ -42,22 +44,35 @@ def build_wps(config_path):
             except FileNotFoundError as e:
                 # Skip this wp if there are no valid annotations
                 continue
-            wps.append(WP(rgb, depth, pcl, annotations)
+            wps.append(WP(wp_title, rgb, depth, pcl, annotations))
 
     return wps
 
 
 class WP():
 
-    def __init__(self, rgb, depth, pcl, annotations):
+    def __init__(self, title, rgb, depth, pcl, annotations):
+        self.title = title
         self.rgb_root = rgb
         self.depth_root = depth
         self.pcl_root = pcl
         self.annotations = annotations
 
 
+    def get_title(self):
+        return self.title
+
+
     def get_rgb_root(self):
         return self.rgb_root
+
+
+    def rgb_images(self):
+        images = {}
+        for img_path in self.rgb_root.iterdir():
+            if img_path.is_file():
+                images[img_path.stem] = Image.open(img_path)
+        return images
 
 
     def get_depth_root(self):
@@ -68,8 +83,14 @@ class WP():
         return self.pcl_root
 
 
-    def get_annotations(self):
-        return self.annotations
+    def get_annotations(self, img_title):
+        for annotation in self.annotations:
+            if annotation['filename'] == f'img/{img_title}.png':
+                return annotation['annotations']
+
+
+    def __str__(self):
+        return self.title
         
 
 if __name__ == '__main__':
