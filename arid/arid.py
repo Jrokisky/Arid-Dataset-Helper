@@ -1,9 +1,10 @@
 import argparse
 import json
+import os
 from pathlib import Path
 
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 
 def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
@@ -29,7 +30,35 @@ def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
     return wps
 
 
+def annotation_path(path, method_name):
+    if isinstance(path, str):
+        path = Path(path)
+    parts = list(path.parts)
+    file_name = parts.pop()
+    curr_dir = parts.pop()
+    parts.append(method_name)
+
+    path = Path(*parts)
+    if not path.exists():
+        os.mkdir(path)
+
+    return Path(path / file_name)
+    
+
+
 def annotate_img(img, file_path, annotations):
+    draw = ImageDraw.Draw(img)
+    if annotations:
+        for annotation in annotations:
+            title = annotation['id'] if annotation['id'] else 'unknown'
+            x = annotation['x']
+            y = annotation['y']
+            width = annotation['width']
+            height = annotation['height']
+            draw.rectangle(((x, y), (x + width, y + height)), outline ="red")
+            draw.text((x, y), title, fill=(255,255,255,128))
+
+        img.save(file_path)
     pass
 
 
@@ -51,11 +80,12 @@ class WP():
         return self.rgb_root
 
 
-    def rgb_images(self):
-        images = {}
-        for img_path in self.rgb_root.iterdir():
-            if img_path.is_file():
-                images[img_path.stem] = Image.open(img_path)
+    def rgb_image_paths(self):
+        images = []
+        if self.rgb_root.exists():
+            for img_path in self.rgb_root.iterdir():
+                if img_path.is_file():
+                    images.append(img_path)
         return images
 
 
