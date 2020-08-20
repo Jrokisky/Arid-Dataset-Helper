@@ -1,5 +1,4 @@
 import argparse
-import configparser
 import json
 from pathlib import Path
 
@@ -7,27 +6,8 @@ from pathlib import Path
 from PIL import Image
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Access the ARID database')
-    parser.add_argument('--config', type=str, default='config.ini')
-    args = parser.parse_args()
-    build_wps(args.config)
-    
-
-def build_wps(config_path='config.ini'):
-    config = configparser.ConfigParser()
-    try:
-        with open(config_path) as config_file:
-            config.read_file(config_file)
-    except FileNotFoundError as e:
-        print(f'Config file not found')
-
-    dataset_root = config['Dataset'].get('root', './dataset')
-    dataset_root = Path(dataset_root).resolve()
-
-    incl_rgb = config['Dataset'].getboolean('include_rgb', True)
-    incl_depth = config['Dataset'].getboolean('include_depth', True)
-    incl_pcl = config['Dataset'].getboolean('include_pcl', False)
+def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
+    dataset_root = Path(dataset_root)
 
     wps = []
     for exp in dataset_root.iterdir():
@@ -47,6 +27,10 @@ def build_wps(config_path='config.ini'):
             wps.append(WP(wp_title, rgb, depth, pcl, annotations))
 
     return wps
+
+
+def annotate_img(img, file_path, annotations):
+    pass
 
 
 class WP():
@@ -92,6 +76,3 @@ class WP():
     def __str__(self):
         return self.title
         
-
-if __name__ == '__main__':
-    main()
