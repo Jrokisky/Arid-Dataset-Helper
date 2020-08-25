@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import random
 
 
 import matplotlib.pyplot as plt
@@ -59,7 +60,11 @@ def annotate_img(img, file_path, annotations):
             score = annotation['score']
             colormap = annotation.get('colormap', 'binary')
             draw.rectangle(((x, y), (x + width, y + height)), outline=map_score_to_color(score, colormap))
-            draw.text((x, y), title, fill=(255,255,255,128))
+
+            # Stagger text to avoid overlaps
+            txt_y = y + (random.random() * height)
+            
+            draw.text((x, txt_y), title, fill=(255,255,255,128))
 
         img.save(file_path)
     pass
