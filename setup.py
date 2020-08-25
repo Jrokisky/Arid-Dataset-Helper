@@ -12,7 +12,8 @@ setup(
     description='Helper function for working with the ARID dataset.',
     install_requires=[
         "jupyterlab",
-        "Pillow"
+        "Pillow",
+        "matplotlib"
     ],
 )
 

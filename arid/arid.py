@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 
+import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw
 
 
@@ -55,11 +56,19 @@ def annotate_img(img, file_path, annotations):
             y = annotation['y']
             width = annotation['width']
             height = annotation['height']
-            draw.rectangle(((x, y), (x + width, y + height)), outline ="red")
+            score = annotation['score']
+            colormap = annotation.get('colormap', 'binary')
+            draw.rectangle(((x, y), (x + width, y + height)), outline=map_score_to_color(score, colormap))
             draw.text((x, y), title, fill=(255,255,255,128))
 
         img.save(file_path)
     pass
+
+
+def map_score_to_color(score, colormap):
+    cmap = plt.get_cmap(colormap)
+    r, g, b, a = cmap(score)
+    return (int(r*255), int(g*255), int(b*255))
 
 
 class WP():
