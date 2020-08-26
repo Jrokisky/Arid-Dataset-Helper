@@ -53,18 +53,17 @@ def annotate_img(img, file_path, annotations):
     if annotations:
         for annotation in annotations:
             title = annotation['id'] if annotation['id'] else 'unknown'
-            x = annotation['x']
-            y = annotation['y']
-            width = annotation['width']
-            height = annotation['height']
+            coords = annotation['coords']
             score = annotation['score']
             colormap = annotation.get('colormap', 'binary')
-            draw.rectangle(((x, y), (x + width, y + height)), outline=map_score_to_color(score, colormap))
+            draw.polygon(coords, outline=map_score_to_color(score, colormap))
 
             # Stagger text to avoid overlaps
-            txt_y = y + (random.random() * height)
-            
-            draw.text((x, txt_y), title, fill=(255,255,255,128))
+            x = coords[0][0]
+            y = coords[0][1]
+            txt_y = coords[0][1] + (random.random() * 15)
+
+            draw.text((coords[0][0], txt_y), title, fill=(255,255,255,255))
 
         img.save(file_path)
     pass
