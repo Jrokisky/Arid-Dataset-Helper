@@ -10,6 +10,12 @@ from PIL import Image, ImageDraw
 
 
 def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
+    """Build WP objects from the given dataset root.
+
+    WP objects represent a single "scene" in the dataset. It's a collection
+    of images that are the result of panning a camera over a scene. There is
+    a single annotation file per WP.
+    """
     dataset_root = Path(dataset_root)
 
     wps = []
@@ -19,6 +25,11 @@ def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
             rgb = Path(wp / 'rgb') if incl_rgb else None
             depth = Path(wp / 'depth') if incl_depth else None
             pcl = Path(wp / 'pcl') if incl_pcl else None
+
+            methods = []
+            for method in wp.iterdir():
+                if method.is_dir() and str(method.stem) not in ['rgb', 'depth', 'pcl']:
+                    methods.append(method)
             
             annotations = None
             try:
@@ -27,12 +38,16 @@ def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
             except FileNotFoundError as e:
                 # Skip this wp if there are no valid annotations
                 continue
-            wps.append(WP(wp_title, rgb, depth, pcl, annotations))
+            wps.append(WP(wp_title, rgb, depth, pcl, methods, annotations))
 
     return wps
 
 
 def annotation_path(path, method_name):
+    """Replaces the second to last item in the given path with the
+    given method name. This is used to replace the 'rgb' dir name
+    with the given bounding method name.
+    """
     if isinstance(path, str):
         path = Path(path)
     parts = list(path.parts)
@@ -49,6 +64,8 @@ def annotation_path(path, method_name):
 
 
 def annotate_img(img, file_path, annotations):
+    """Draw bounding polygons on the given img.
+    """
     draw = ImageDraw.Draw(img)
     if annotations:
         for annotation in annotations:
@@ -77,11 +94,12 @@ def map_score_to_color(score, colormap):
 
 class WP():
 
-    def __init__(self, title, rgb, depth, pcl, annotations):
+    def __init__(self, title, rgb, depth, pcl, methods, annotations):
         self.title = title
         self.rgb_root = rgb
         self.depth_root = depth
         self.pcl_root = pcl
+        self.method_roots = methods
         self.annotations = annotations
 
 
@@ -91,6 +109,24 @@ class WP():
 
     def get_rgb_root(self):
         return self.rgb_root
+
+    
+    def get_method_names(self):
+        method_names = []
+        for method_root in self.method_roots:
+            method_names.append(method_root.stem)
+        return method_names
+
+
+    def method_image_paths(self):
+        images = {}
+        for method_root in self.methods_roots:
+            method_name = method_root.stem
+            images[method_name] = []
+            for img_path in method_root.iterdir():
+                if img_path.is_file():
+                    images[method_name].append(img_path)
+        return images
 
 
     def rgb_image_paths(self):
