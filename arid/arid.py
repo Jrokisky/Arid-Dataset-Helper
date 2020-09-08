@@ -32,13 +32,14 @@ def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
                     methods.append(method)
             
             annotations = None
+            annotations_path = Path(wp / f'{wp_title}_labels.json')
             try:
-                with open(Path(wp / f'{wp_title}_labels.json')) as json_file:
+                with open(annotations_path) as json_file:
                     annotations = json.load(json_file)
             except FileNotFoundError as e:
                 # Skip this wp if there are no valid annotations
                 continue
-            wps.append(WP(wp_title, rgb, depth, pcl, methods, annotations))
+            wps.append(WP(wp_title, rgb, depth, pcl, methods, annotations, annotations_path))
 
     return wps
 
@@ -94,13 +95,17 @@ def map_score_to_color(score, colormap):
 
 class WP():
 
-    def __init__(self, title, rgb, depth, pcl, methods, annotations):
+    def __init__(self, title, rgb, depth, pcl, methods, annotation_data, annotations_path):
         self.title = title
         self.rgb_root = rgb
         self.depth_root = depth
         self.pcl_root = pcl
         self.method_roots = methods
-        self.annotations = annotations
+        self.annotation_data = annotation_data
+        self.keyed_annotations = {}
+        for image_annotations in annotation_data:
+            self.keyed_annotations[image_annotations['filename']] = image_annotations
+        self.annotations_path = annotations_path
 
 
     def get_title(self):
@@ -147,9 +152,18 @@ class WP():
 
 
     def get_annotations(self, img_title):
-        for annotation in self.annotations:
-            if annotation['filename'] == f'img/{img_title}.png':
-                return annotation['annotations']
+        img_title = f'img/{img_title}.png'
+        return self.keyed_annotations[img_title]
+
+
+    def set_annotations(self, img_title, annotations):
+        img_title = f'img/{img_title}.png'
+        self.keyed_annotations[img_title] = annotations
+        
+
+
+    def write_annotations(self):
+        pass
 
 
     def __str__(self):
