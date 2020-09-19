@@ -110,6 +110,11 @@ class WP():
         self.annotations_path = annotations_path
 
 
+    def get_key(self):
+        prefix, session, waypoint, y = self.title.split("_")
+        return int(session) * 1000 + int(waypoint) * 100 +  int(y) 
+
+
     def get_title(self):
         return self.title
 
@@ -142,6 +147,7 @@ class WP():
             for img_path in self.rgb_root.iterdir():
                 if img_path.is_file():
                     images.append(img_path)
+        images = sorted(images, key=lambda i: int(i.stem))
         return images
 
 
