@@ -38,6 +38,7 @@ def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
                     annotations = json.load(json_file)
             except FileNotFoundError as e:
                 # Skip this wp if there are no valid annotations
+                print(f'{annotations_path} either could not be loaded or does not exist')
                 continue
             wps.append(WP(wp_title, rgb, depth, pcl, methods, annotations, annotations_path))
 
@@ -64,7 +65,7 @@ def annotation_path(path, method_name):
     
 
 
-def annotate_img(img, file_path, annotations):
+def annotate_img(img, file_path, annotations, save=True):
     """Draw bounding polygons on the given img.
     """
     draw = ImageDraw.Draw(img)
@@ -83,7 +84,8 @@ def annotate_img(img, file_path, annotations):
 
             draw.text((coords[0][0], txt_y), title, fill=(255,255,255,255))
 
-        img.save(file_path)
+        if save:
+            img.save(file_path)
     pass
 
 
