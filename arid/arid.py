@@ -26,6 +26,9 @@ def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
             depth = Path(wp / 'depth') if incl_depth else None
             pcl = Path(wp / 'pcl') if incl_pcl else None
 
+            if incl_rgb and not rgb.exists():
+                continue
+
             methods = []
             for method in wp.iterdir():
                 if method.is_dir() and str(method.stem) not in ['rgb', 'depth', 'pcl']:
@@ -36,11 +39,11 @@ def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
             try:
                 with open(annotations_path) as json_file:
                     annotations = json.load(json_file)
+                wps.append(WP(wp_title, rgb, depth, pcl, methods, annotations, annotations_path))
             except FileNotFoundError as e:
                 # Skip this wp if there are no valid annotations
                 print(f'{annotations_path} either could not be loaded or does not exist')
                 continue
-            wps.append(WP(wp_title, rgb, depth, pcl, methods, annotations, annotations_path))
 
     return wps
 
@@ -75,14 +78,15 @@ def annotate_img(img, file_path, annotations, save=True):
             coords = annotation['coords']
             score = annotation['score']
             colormap = annotation.get('colormap', 'binary')
-            draw.polygon(coords, outline=map_score_to_color(score, colormap))
+            _coords = list(map(lambda c: (c[0], c[1]), coords))
+            draw.polygon(_coords, outline=map_score_to_color(score, colormap))
 
             # Stagger text to avoid overlaps
             x = coords[0][0]
             y = coords[0][1]
             txt_y = coords[0][1] + (random.random() * 15)
 
-            draw.text((coords[0][0], txt_y), title, fill=(255,255,255,255))
+            draw.text((x, txt_y), title, fill=(255,255,255,255))
 
         if save:
             img.save(file_path)
