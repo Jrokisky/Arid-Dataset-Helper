@@ -86,7 +86,7 @@ def annotate_img(img, file_path, annotations, save=True):
             y = coords[0][1]
             txt_y = coords[0][1] + (random.random() * 15)
 
-            draw.text((x, txt_y), title, fill=(255,255,255,255))
+            draw.text((x, txt_y), f'{title}-{str(int(score*100))}', fill=(255,255,255,255))
 
         if save:
             img.save(file_path)
