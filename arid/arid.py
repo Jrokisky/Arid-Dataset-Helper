@@ -99,6 +99,46 @@ def map_score_to_color(score, colormap):
     return (int(r*255), int(g*255), int(b*255))
 
 
+def compute_bbox_iou(coords1, coords2):
+    # Assumes all inputs are the coordinates for the corners of a bounding box.
+    if len(coords1) != 4 or len(coords2) != 4:
+        return False
+
+    (ax1, ay1), (ax2, ay1), (ax2, ay2), (ax1, ay2) = coords1
+    (bx1, by1), (bx2, by1), (bx2, by2), (bx1, by2) = coords2
+
+    # No intersection at all.
+    if ax1 > bx2 or bx1 > ax2 or ay1 > by2 or by1 > ay2:
+        return 0
+
+    # Compute the intersection
+    min_right = min(ax2, bx2)
+    max_left = max(ax1, bx1)
+    intersection_width = min_right - max_left
+    
+    # (0,0) is in the top right corner of the image.
+    max_top = max(ay1, by1)
+    min_bottom = min(ay2, by2)
+    intersection_height = min_bottom - max_top
+
+    intersection_area = intersection_width * intersection_height
+    if intersection_area == 0:
+        return 0
+
+    a_width = ax2 - ax1
+    a_height = ay2 - ay1
+    a_area = a_width * a_height
+
+    b_width = bx2 - bx1
+    b_height = by2 - by1
+    b_area = b_width * b_height
+
+    union_area = (a_area + b_area) - intersection_area
+
+    return intersection_area / union_area
+
+
+
 class WP():
 
     def __init__(self, title, rgb, depth, pcl, methods, annotation_data, annotations_path):
