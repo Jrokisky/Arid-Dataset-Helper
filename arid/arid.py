@@ -213,6 +213,18 @@ class WP():
         return self.keyed_annotations[img_title]
 
 
+    def get_images_with_object(self, object_name):
+        imgs = []
+        for img, annotation_data in self.keyed_annotations.items():
+            annotations = annotation_data['annotations']
+            for annotation in annotations:
+                if annotation.get('id') is None:
+                    continue
+                elif annotation['id'].startswith(object_name):
+                    imgs.append(img)
+        return imgs
+
+
     def __str__(self):
         return self.title
         
