@@ -155,6 +155,7 @@ class WP():
 
 
     def get_key(self):
+        # generates a unique id for this wp that maintains sort order.
         prefix, session, waypoint, y = self.title.split("_")
         return int(session) * 1000 + int(waypoint) * 100 +  int(y) 
 
@@ -168,6 +169,7 @@ class WP():
 
     
     def get_method_names(self):
+        # Gets the methods used to generate annotated images.
         method_names = []
         for method_root in self.method_roots:
             method_names.append(method_root.stem)
@@ -175,6 +177,7 @@ class WP():
 
 
     def method_image_paths(self):
+        # Get image paths keyed by the method used to produce them.
         images = {}
         for method_root in self.methods_roots:
             method_name = method_root.stem
@@ -186,6 +189,7 @@ class WP():
 
 
     def rgb_image_paths(self):
+        # Get paths for all rgb images in this wp.
         images = []
         if self.rgb_root.exists():
             for img_path in self.rgb_root.iterdir():
@@ -204,18 +208,9 @@ class WP():
 
 
     def get_annotations(self, img_title):
+        # Get ground truth annotations for the given img.
         img_title = f'img/{img_title}.png'
         return self.keyed_annotations[img_title]
-
-
-    def set_annotations(self, img_title, annotations):
-        img_title = f'img/{img_title}.png'
-        self.keyed_annotations[img_title] = annotations
-        
-
-
-    def write_annotations(self):
-        pass
 
 
     def __str__(self):
