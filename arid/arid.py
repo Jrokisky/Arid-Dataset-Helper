@@ -93,6 +93,20 @@ def annotate_img(img, file_path, annotations, save=True):
     pass
 
 
+def hide_crops(img, file_path, annotations, save=True):
+    """Remove sections of an image.
+    """
+    draw = ImageDraw.Draw(img)
+    if annotations:
+        for annotation in annotations:
+            coords = annotation['coords']
+            _coords = list(map(lambda c: (c[0], c[1]), coords))
+            draw.rectangle(_coords, fill="#ffffff")
+        if save:
+            img.save(file_path)
+    pass
+
+
 def map_score_to_color(score, colormap):
     cmap = plt.get_cmap(colormap)
     r, g, b, a = cmap(score)
@@ -221,7 +235,11 @@ class WP():
                 if annotation.get('id') is None:
                     continue
                 elif annotation['id'].startswith(object_name):
-                    imgs.append(img)
+                    p = Path(self.rgb_root / Path(img).name)
+                    imgs.append({
+                        'path': p,
+                        'annotation': annotation
+                    })
         return imgs
 
 
