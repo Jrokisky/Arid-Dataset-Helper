@@ -10,11 +10,10 @@ from PIL import Image, ImageDraw
 
 
 def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
-    """Build WP objects from the given dataset root.
+    """Build WP objects from the local Autonomous Robot Indoor Dataset root.
 
-    WP objects represent a single "scene" in the dataset. It's a collection
-    of images that are the result of panning a camera over a scene. There is
-    a single annotation file per WP.
+    WP objects represent a single collection of images that are the result of 
+    panning a camera over a waypoint.
     """
     dataset_root = Path(dataset_root)
 
@@ -49,9 +48,11 @@ def get_wps(dataset_root, incl_rgb=True, incl_depth=True, incl_pcl=False):
 
 
 def annotation_path(path, method_name):
-    """Replaces the second to last item in the given path with the
+    """Helper method for saving bounding box predictions.
+
+    Replaces the second to last item in the given path with the
     given method name. This is used to replace the 'rgb' dir name
-    with the given bounding method name.
+    with the given bounding box predictionmethod name.
     """
     if isinstance(path, str):
         path = Path(path)
@@ -69,7 +70,7 @@ def annotation_path(path, method_name):
 
 
 def annotate_img(img, file_path, annotations, save=True):
-    """Draw bounding polygons on the given img.
+    """Draw bounding box annotations  on the given image and save to the file_path if desired.
     """
     draw = ImageDraw.Draw(img)
     if annotations:
@@ -94,7 +95,7 @@ def annotate_img(img, file_path, annotations, save=True):
 
 
 def hide_crops(img, file_path, annotations, save=True):
-    """Remove sections of an image.
+    """Remove a rectangular crop from an image.
     """
     draw = ImageDraw.Draw(img)
     if annotations:
@@ -108,12 +109,17 @@ def hide_crops(img, file_path, annotations, save=True):
 
 
 def map_score_to_color(score, colormap):
+    """Map a confidence score to a colormap.
+    """
     cmap = plt.get_cmap(colormap)
     r, g, b, a = cmap(score)
     return (int(r*255), int(g*255), int(b*255))
 
 
 def compute_bbox_iou(coords1, coords2):
+    """Compute the Intersection Over Union metric between two bounding boxes.
+    """
+
     # Assumes all inputs are the coordinates for the corners of a bounding box.
     if len(coords1) != 4 or len(coords2) != 4:
         return False
@@ -154,6 +160,8 @@ def compute_bbox_iou(coords1, coords2):
 
 
 class WP():
+    """An ARID waypoint object.
+    """
 
     def __init__(self, title, rgb, depth, pcl, methods, annotation_data, annotations_path):
         self.title = title
@@ -183,7 +191,8 @@ class WP():
 
     
     def get_method_names(self):
-        # Gets the methods used to generate annotated images.
+        """Gets the methods used to generate annotated images.
+        """
         method_names = []
         for method_root in self.method_roots:
             method_names.append(method_root.stem)
@@ -191,7 +200,8 @@ class WP():
 
 
     def method_image_paths(self):
-        # Get image paths keyed by the method used to produce them.
+        """Get image paths keyed by the method used to produce them.
+        """
         images = {}
         for method_root in self.methods_roots:
             method_name = method_root.stem
@@ -203,7 +213,8 @@ class WP():
 
 
     def rgb_image_paths(self):
-        # Get paths for all rgb images in this wp.
+        """Get paths for all rgb images in this wp.
+        """
         images = []
         if self.rgb_root.exists():
             for img_path in self.rgb_root.iterdir():
@@ -222,12 +233,15 @@ class WP():
 
 
     def get_annotations(self, img_title):
-        # Get ground truth annotations for the given img.
+        """Get ground truth annotations for the given img.
+        """
         img_title = f'img/{img_title}.png'
         return self.keyed_annotations[img_title]
 
 
     def get_images_with_object(self, object_name):
+        """Get all the images in this waypoint with annotations for the target object.
+        """
         imgs = []
         for img, annotation_data in self.keyed_annotations.items():
             annotations = annotation_data['annotations']
